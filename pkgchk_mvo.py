@@ -21,12 +21,11 @@ def is_available(dist):
         if not want_pkg in cache:
             print("%s missing")
             return False
-        for ver in cache[want_pkg].versions:
-            if ver == want_ver:
-                break
-            else:
-                print("%s not available for %s" % (want_ver, want_pkg))
-                return False
+        if want_ver in cache[want_pkg].versions:
+            break
+        else:
+            print("%s not available for %s" % (want_ver, want_pkg))
+            return False
     return True
 
 
