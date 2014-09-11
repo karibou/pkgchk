@@ -5,36 +5,28 @@ import sys
 
 import apt
 
-def init_cache(rootdir):
-    cache = apt.Cache(rootdir=rootdir)
-    cache.update()
-    pkg="apt"
+
+def get_info(pkg):
+    cache = apt.Cache()
+#    pkg="udev"
     if pkg in cache:
-        print("Found pkg %s" % pkg)
-
-def is_available(dist):
-    etcdir = os.path.join(dist, "etc", "apt")
-    if not os.path.exists(etcdir):
-        os.makedirs(etcdir)
-    with open(os.path.join(etcdir, "sources.list"), "w") as f:
-        for pocket in ["", "-updates", "-security", "-proposed"]:
-            f.write("deb http://archive.ubuntu.com/ubuntu %s%s main restricted universe multiverse\n" % (dist, pocket))
-    cache = apt.Cache(rootdir="./%s" % dist)
-    cache.update()
-    for line in sys.stdin.readlines():
-        if not line:
-            continue
-        want_pkg, want_ver = line.split()
-        if not want_pkg in cache:
-            print("%s missing")
-            return False
-        if want_ver in cache[want_pkg].versions:
-            break
+        print("%s:" % pkg)
+        if cache[pkg].is_installed:
+            print("  Installed : {}".format(cache[pkg].installed.version))
+            print("  Candidate : {}".format(cache[pkg].candidate.version))
         else:
-            print("%s not available for %s" % (want_ver, want_pkg))
-            return False
-    return True
-
+            print("  Installed : (none)")
+            print("  Candidate : {}".format(cache[pkg].candidate.version))
+    print("  Revision Table :")
+    print("      {}".format(cache[pkg].candidate.version))
+    for origin in cache[pkg].candidate.origins:
+        print("          {} http://{}/ubuntu/ {}/{} {}".format(
+                            cache[pkg].candidate.policy_priority,
+                            origin.site,
+                            origin.codename,
+                            origin.component,
+                            cache[pkg].candidate.architecture
+                        ))
 
 if __name__ == "__main__":
-    init_cache("./sosreport-TrustyS-testdump-20140829163304/etc/apt")
+    get_info("udev")
